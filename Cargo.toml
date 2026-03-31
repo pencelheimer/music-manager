@@ -1,4 +1,6 @@
 [workspace]
 resolver = "3"
+members = ["core_lib"]
 
 [workspace.dependencies]
+kameo = "0.19.2"
