@@ -1,0 +1,103 @@
+@startuml
+skin rose
+skinparam backgroundColor #EEEBDC
+hide empty members
+
+
+  interface ProcessingPlugin <<trait>> {
+    + name() : String
+    + init(db: SqlitePool) : Result<(), PluginError>
+    + spawn_actor(ctx: Arc<GlobalContext>) : ActorRef<dyn AnyActor>
+  }
+
+  interface CommunicationPlugin <<trait>> {
+    + name() : String
+    + init(db: SqlitePool) : Result<(), PluginError>
+    + start_background_loop(ctx: Arc<GlobalContext>) : Result<(), PluginError>
+  }
+
+  class GlobalContext <<struct>> {
+    + db_pool : SqlitePool
+    + lua_actor : ActorRef<LuaActor>
+    + coordinator_actor : ActorRef<CoordinatorActor>
+  }
+
+    class ProcessTrackMsg <<Message>> {
+      + track_id : Id
+      + file_path : PathBuf
+      + current_metadata : Option<Json>
+    }
+    class InteractionRequiredMsg <<Message>> {
+      + track_id : Id
+      + plugin_name : String
+      + interaction_type : InteractionType
+      + payload : Json
+    }
+    class TaskCompletedMsg <<Message>> {
+      + track_id : Id
+      + success : bool
+      + new_path : Option<PathBuf>
+      + error_message : Option<String>
+    }
+    class ResolveInteractionMsg <<Message>> {
+      + interaction_id : i64
+      + answer_payload : Json
+    }
+    class LuaRunMsg <<Message>> {
+      + function_name : String
+      + json_args : String
+    }
+    class StartProcessingMsg <<Message>> {
+      + file_path : PathBuf
+    }
+
+  class DaemonBuilder <<struct>> {
+    - processing_plugins : Vec<Box<dyn ProcessingPlugin>>
+    - communication_plugins : Vec<Box<dyn CommunicationPlugin>>
+    --
+    + register_processing(plugin: Box<dyn ProcessingPlugin>)
+    + register_communication(plugin: Box<dyn CommunicationPlugin>)
+    + run() : Result<(), Error>
+  }
+
+  class FsWatcher <<struct>> {
+    - ignore_cache : Arc<DashSet<PathBuf>>
+    + start_watching(dir: PathBuf, coordinator: ActorRef<CoordinatorActor>)
+  }
+
+  class CoordinatorActor <<Actor>> {
+    - pipeline_stages : Vec<String>
+    - processing_actors : HashMap<String, ActorRef<dyn AnyActor>>
+    --
+    + handle(StartProcessingMsg)
+    + handle(TaskCompletedMsg)
+    + handle(InteractionRequiredMsg)
+    + handle(ResolveInteractionMsg)
+  }
+
+  class LuaActor <<Actor>> {
+    - vm : mlua::Lua
+    --
+    + handle(LuaRunMsg)
+  }
+
+' ProcessTrackMsg -[hidden]l- TaskCompletedMsg
+' ProcessTrackMsg -[hidden]d- StartProcessingMsg
+' TaskCompletedMsg -[hidden]d- InteractionRequiredMsg
+' InteractionRequiredMsg -[hidden]d- LuaRunMsg
+' LuaRunMsg -[hidden]d- ResolveInteractionMsg
+
+CoordinatorActor ..> ProcessTrackMsg: "sends to Plugin Actor"
+
+DaemonBuilder ..> LuaActor : "spawns"
+DaemonBuilder ..> CoordinatorActor : "spawns"
+DaemonBuilder ...> FsWatcher : "spawns in background"
+DaemonBuilder ..> ProcessingPlugin : "calls .init() & .spawn_actor()"
+DaemonBuilder ..> CommunicationPlugin : "calls .init() & .start_background_loop()"
+
+FsWatcher ..> StartProcessingMsg : "sends"
+ProcessingPlugin ..> TaskCompletedMsg : "sends to Coordinator"
+ProcessingPlugin ..> InteractionRequiredMsg : "sends to Coordinator"
+CommunicationPlugin ..> ResolveInteractionMsg : "sends to Coordinator"
+
+@enduml

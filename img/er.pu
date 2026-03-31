@@ -1,0 +1,65 @@
+@startuml
+
+hide methods
+skin rose
+skinparam backgroundColor #EEEBDC
+
+entity "tracks" as tracks {
+  + id : INTEGER <<generated>>
+  + file_path : TEXT <<UNIQUE>>
+  --
+  * current_stage : TEXT
+  * status : STATUS
+  --
+  * mtime : TIMESTAMP
+  * file_size : INTEGER
+  --
+  * created_at : TIMESTAMP
+  * updated_at : TIMESTAMP
+}
+
+entity "processing_history" as processing_history {
+  + id : INTEGER <<generated>>
+  --
+  * track_id : INTEGER <<FK>>
+  * plugin_name : TEXT
+  * message : TEXT
+  * created_at : TIMESTAMP
+}
+
+entity "pending_interactions" as pending_interactions {
+  + id : INTEGER <<generated>>
+  --
+  * track_id : INTEGER <<FK>>
+  * plugin_name : TEXT
+  * interaction_type : INTERACTION_TYPE
+  * payload : JSON
+  * created_at : TIMESTAMP
+}
+
+enum "STAUTS" as status {
+  + pending
+  + processing
+  + paused_waiting_user
+  + completed
+  + failed
+}
+
+enum "INTERACTION_TYPE" as interaction_type {
+  + select_from_list
+  + confirm_action
+  + input_text
+}
+
+
+tracks ||--o{ processing_history : "logs"
+tracks ||--o{ pending_interactions : "has"
+
+status -[hidden]- interaction_type
+
+note left of tracks
+  **current_stage**: the name of the plugin
+  **mtime**: time when file was changed
+end note
+
+@enduml
