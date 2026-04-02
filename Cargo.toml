@@ -6,3 +6,5 @@ members = ["core_bin", "core_lib"]
 kameo = "0.19.2"
 tracing = "0.1.44"
 tracing-subscriber = "0.3.23"
+mlua = { version = "0.11.6", features = ["lua55", "vendored", "async", "send"] }
+error_set = "0.9.1"

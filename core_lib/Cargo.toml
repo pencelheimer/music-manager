@@ -4,4 +4,11 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+error_set = { workspace = true }
+mlua = { workspace = true }
 kameo = { workspace = true }
+tracing = { workspace = true }
+
+[dev-dependencies]
+tempfile = "3.27.0"
+docstr = "0.4.10"
