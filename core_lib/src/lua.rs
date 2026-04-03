@@ -1,6 +1,6 @@
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
-use mlua::Lua;
+use mlua::{FromLua, Lua, Table as LuaTable};
 use tracing::{debug, instrument};
 
 use crate::error::{LibError, LuaError};
@@ -23,6 +23,7 @@ impl LuaVM {
         let config_table = lua.create_table()?;
 
         config_table.set("watch_dir", "/default/music/dir")?;
+        config_table.set("db_url", "/default/music/dir/db.sqlite")?;
 
         lua.globals().set("config", config_table)?;
         Ok(())
@@ -35,6 +36,22 @@ impl LuaVM {
         self.0.load(path.as_ref()).exec()?;
 
         Ok(())
+    }
+
+    pub fn get_config_value<T: FromLua>(&self, key: impl AsRef<str>) -> Result<T, LuaError> {
+        let config_table: LuaTable = self.0.globals().get("config")?;
+
+        Ok(config_table.get(key.as_ref())?)
+    }
+
+    pub fn db_url(&self) -> Result<String, LuaError> {
+        let path: String = self.get_config_value("db_url")?;
+        Ok(path)
+    }
+
+    pub fn watch_dir(&self) -> Result<PathBuf, LuaError> {
+        let path: PathBuf = self.get_config_value("watch_dir")?;
+        Ok(path)
     }
 }
 
@@ -94,7 +111,7 @@ mod tests {
         assert!(result.is_err(), "Expected an error due to bad Lua syntax");
 
         match result.unwrap_err() {
-            LuaError::Mlua(_) => {} // _ => panic!("Expected mlua syntax error"),
+            LuaError::Mlua(_) => {}
         }
     }
 

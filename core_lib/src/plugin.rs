@@ -1,7 +1,7 @@
-pub use communication::Plugin as CommunicationPlugin;
 pub use processing::Plugin as ProcessingPlugin;
+pub use service::Plugin as ServicePlugin;
 
-mod communication {
+mod service {
     use std::convert::Infallible;
     use std::error::Error;
     use std::result::Result;

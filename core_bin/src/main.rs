@@ -2,13 +2,14 @@ use std::process::ExitCode;
 
 use clap::Parser;
 use core_bin::{Args, init_tracing};
-use core_lib::{GlobalState, LuaVM};
+use core_lib::{GlobalState, LuaVM, db};
 
-fn main() -> ExitCode {
+#[tokio::main]
+async fn main() -> ExitCode {
     let args = Args::parse();
     init_tracing();
 
-    if let Err(e) = run(args) {
+    if let Err(e) = run(args).await {
         tracing::error!("Fatal daemon error: {:#}", e);
         return ExitCode::FAILURE;
     }
@@ -16,13 +17,15 @@ fn main() -> ExitCode {
     ExitCode::SUCCESS
 }
 
-fn run(args: Args) -> anyhow::Result<()> {
+async fn run(args: Args) -> anyhow::Result<()> {
     tracing::info!("Core is starting");
 
     let lua = LuaVM::new()?;
     lua.load_user_config(&args.config_path)?;
 
-    let _state = GlobalState::new(lua);
+    let db_pool = db::init(lua.db_url()?).await?;
+
+    let _state = GlobalState::new(lua, db_pool);
 
     Ok(())
 }
