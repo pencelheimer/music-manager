@@ -224,6 +224,7 @@ dependencies = [
  "anyhow",
  "clap",
  "core_lib",
+ "kameo",
  "tokio",
  "tracing",
  "tracing-subscriber",
