@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["core_bin", "core_lib"]
+members = ["core_bin", "core_lib", "service_watcher"]
 
 [workspace.dependencies]
 error_set = "0.9.1"

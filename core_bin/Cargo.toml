@@ -5,6 +5,7 @@ edition = "2024"
 
 [dependencies]
 core_lib = { path = "../core_lib" }
+service_watcher = { path = "../service_watcher" }
 
 anyhow = "1.0.102"
 clap = { version = "4.6.0", features = ["derive", "string"] }
