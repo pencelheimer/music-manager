@@ -1,4 +1,4 @@
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use mlua::{FromLua, Lua, Table as LuaTable};
 use tracing::{debug, instrument};
@@ -41,16 +41,12 @@ impl LuaVM {
     pub fn get_config_value<T: FromLua>(&self, key: impl AsRef<str>) -> Result<T, LuaError> {
         let config_table: LuaTable = self.0.globals().get("config")?;
 
+        // TODO(pencelheimer): consider better error message
         Ok(config_table.get(key.as_ref())?)
     }
 
     pub fn db_url(&self) -> Result<String, LuaError> {
         let path: String = self.get_config_value("db_url")?;
-        Ok(path)
-    }
-
-    pub fn watch_dir(&self) -> Result<PathBuf, LuaError> {
-        let path: PathBuf = self.get_config_value("watch_dir")?;
         Ok(path)
     }
 }

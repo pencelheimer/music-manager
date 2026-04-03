@@ -1,5 +1,5 @@
 pub mod db;
-mod error;
+pub mod error;
 mod lua;
 pub mod messages;
 mod plugin;
