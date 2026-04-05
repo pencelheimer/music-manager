@@ -8,7 +8,7 @@ use tracing::{debug, info, instrument};
 
 use crate::error::DbError;
 
-static MIGRATOR: Migrator = sqlx::migrate!();
+pub static MIGRATOR: Migrator = sqlx::migrate!();
 
 #[instrument(fields(db_url = %db_url.as_ref()))]
 pub async fn init(db_url: impl AsRef<str>) -> Result<SqlitePool, DbError> {
@@ -41,7 +41,7 @@ async fn create_parent_dir_if_necessary(db_url: impl AsRef<str>) -> Result<(), D
             && !parent_dir.as_os_str().is_empty()
             && !parent_dir.exists()
         {
-            debug!("Creating database directory at {:?}", parent_dir);
+            debug!(?parent_dir, "Creating database directory");
             tokio::fs::create_dir_all(parent_dir).await?;
         }
     }

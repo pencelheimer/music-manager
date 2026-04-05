@@ -1,7 +1,7 @@
-use std::process::ExitCode;
+use std::{collections::HashMap, process::ExitCode};
 
 use clap::Parser as _;
-use core_bin::{Args, CoordinatorActor, init_tracing};
+use core_bin::{Args, Coordinator, init_tracing};
 use core_lib::{GlobalState, LuaVM, ServicePlugin as _, db};
 use kameo::actor::Spawn as _;
 use service_watcher::WatcherService;
@@ -27,9 +27,13 @@ async fn run(args: Args) -> anyhow::Result<()> {
 
     let db_pool = db::init(lua.db_url()?).await?;
 
-    let state = GlobalState::new(lua, db_pool);
+    let state = GlobalState::new(lua, db_pool.clone());
 
-    let coordinator_ref = CoordinatorActor::spawn(CoordinatorActor);
+    let plugins = HashMap::from([]);
+
+    let coordinator = Coordinator::new(state.clone(), plugins)?;
+    let coordinator_ref = Coordinator::spawn(coordinator);
+
     let watcher = WatcherService::new(state, coordinator_ref)?;
 
     watcher.start_loop().await?;

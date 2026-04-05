@@ -1,5 +1,6 @@
 use std::{collections::HashSet, convert::Infallible, path::PathBuf, time::Duration};
 
+use async_trait::async_trait;
 use core_lib::{GlobalState, ServicePlugin, messages::TrackEventHandler};
 use kameo::{Actor, actor::ActorRef};
 use notify_debouncer_full::new_debouncer;
@@ -16,8 +17,12 @@ pub struct WatcherService<A: Actor + TrackEventHandler> {
 
 impl<A: Actor + TrackEventHandler> WatcherService<A> {
     pub fn new(state: GlobalState, target_actor: ActorRef<A>) -> Result<Self, WatcherError> {
-        let watch_dir = state.lua_vm.watch_dir()?;
-        let allowed_extensions = state.lua_vm.allowed_extensions()?;
+        let lua_vm = state.lua_vm;
+
+        lua_vm.set_default_config_value("watch_dir", "/default/music/dir")?;
+
+        let watch_dir = lua_vm.watch_dir()?;
+        let allowed_extensions = lua_vm.allowed_extensions()?;
 
         Ok(Self {
             watch_dir,
@@ -27,6 +32,7 @@ impl<A: Actor + TrackEventHandler> WatcherService<A> {
     }
 }
 
+#[async_trait]
 impl<A: Actor + TrackEventHandler> ServicePlugin<WatcherError> for WatcherService<A> {
     fn name() -> &'static str {
         "fs_watcher"

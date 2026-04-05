@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use mlua::{FromLua, Lua, Table as LuaTable};
+use mlua::{FromLua, IntoLua, Lua, Table as LuaTable, Value as LuaValue};
 use tracing::{debug, instrument};
 
 use crate::error::{LibError, LuaError};
@@ -22,7 +22,6 @@ impl LuaVM {
         debug!("Injecting base 'config' table into Lua globals");
         let config_table = lua.create_table()?;
 
-        config_table.set("watch_dir", "/default/music/dir")?;
         config_table.set("db_url", "/default/music/dir/db.sqlite")?;
 
         lua.globals().set("config", config_table)?;
@@ -39,15 +38,37 @@ impl LuaVM {
     }
 
     pub fn get_config_value<T: FromLua>(&self, key: impl AsRef<str>) -> Result<T, LuaError> {
+        // TODO(pencelheimer): consider better error message
         let config_table: LuaTable = self.0.globals().get("config")?;
 
-        // TODO(pencelheimer): consider better error message
         Ok(config_table.get(key.as_ref())?)
     }
 
+    #[instrument(skip(self, default_value), fields(key = %key.as_ref()))]
+    pub fn set_default_config_value<V: IntoLua>(
+        &self,
+        key: impl AsRef<str>,
+        default_value: V,
+    ) -> Result<(), LuaError> {
+        let config_table: LuaTable = self.0.globals().get("config")?;
+        let key_ref = key.as_ref();
+
+        let current_value: LuaValue = config_table.get(key_ref)?;
+
+        if current_value.is_nil() {
+            debug!("Config value is nil, applying default value");
+            config_table.set(key_ref, default_value)?;
+        }
+
+        Ok(())
+    }
+
+    pub fn pipeline_steps(&self) -> Result<Vec<String>, LuaError> {
+        self.get_config_value("pipeline_steps")
+    }
+
     pub fn db_url(&self) -> Result<String, LuaError> {
-        let path: String = self.get_config_value("db_url")?;
-        Ok(path)
+        self.get_config_value("db_url")
     }
 }
 

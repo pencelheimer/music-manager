@@ -1,0 +1,51 @@
+use std::path::PathBuf;
+
+use crate::models::{FileMetrics, InteractionType};
+
+/// Sent by a plugin when it successfully completes its stage of the pipeline.
+#[derive(Debug, Clone)]
+pub struct StageCompleted {
+    /// ID of the track.
+    pub track_id: i64,
+
+    /// Name of the plugin.
+    pub plugin_name: String,
+
+    /// Contains updated file metrics if the plugin modified the file on disk
+    /// (e.g., added ID3 tags, transcoded, or moved the file).
+    pub new_metrics: Option<FileMetrics>,
+
+    /// Contains updated file puth if the plugin moved the file on disk.
+    pub new_path: Option<PathBuf>,
+}
+
+/// Sent by a plugin when it encounters an unrecoverable error.
+#[derive(Debug, Clone)]
+pub struct StageFailed {
+    /// ID of the track.
+    pub track_id: i64,
+
+    /// Name of the plugin.
+    pub plugin_name: String,
+
+    /// Error encountered by the plugin
+    pub error_message: String,
+}
+
+/// Sent by a plugin when it requires human intervention to proceed.
+/// The Coordinator should pause the pipeline and store this request in the database.
+#[derive(Debug, Clone)]
+pub struct UserInteractionRequired {
+    /// ID of the track.
+    pub track_id: i64,
+
+    /// Name of the plugin.
+    pub plugin_name: String,
+
+    /// Type of the interaction to show.
+    pub interaction_type: InteractionType,
+
+    /// A flexible JSON payload describing the request
+    /// (e.g., `{"options": ["Song A", "Song B"]}` or `{"prompt": "Enter artist name"}`).
+    pub request_payload: serde_json::Value,
+}

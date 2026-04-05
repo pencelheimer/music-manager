@@ -10,6 +10,9 @@ service_watcher = { path = "../service_watcher" }
 anyhow = "1.0.102"
 clap = { version = "4.6.0", features = ["derive", "string"] }
 kameo = { workspace = true }
+sqlx = { workspace = true }
+serde_json = { workspace = true }
+time = { workspace = true }
 tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
 tracing = "0.1.44"
 tracing-subscriber = { workspace = true, features = ["env-filter"] }

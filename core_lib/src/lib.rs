@@ -1,4 +1,5 @@
 pub mod db;
+pub mod models;
 pub mod error;
 mod lua;
 pub mod messages;

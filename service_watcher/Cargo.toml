@@ -6,6 +6,7 @@ edition = "2024"
 [dependencies]
 core_lib = { path = "../core_lib" }
 
+async-trait = { workspace = true }
 error_set = { workspace = true }
 kameo = { workspace = true }
 notify = "8.2.0"
