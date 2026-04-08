@@ -16,10 +16,27 @@ impl Coordinator {
     /// This is called directly during track processing or recovery,
     /// avoiding internal message passing and mailbox races.
     #[instrument(skip_all, fields(track_id = id))]
-    pub async fn advance_pipeline(&mut self, id: i64) {
+    pub async fn advance_pipeline(&self, id: i64) {
         let Some(track) = self.get_track(id).await else {
             return;
         };
+
+        if track.status != TrackStatus::Pending && track.status != TrackStatus::Processing {
+            return;
+        }
+
+        if !tokio::fs::try_exists(&track.file_path)
+            .await
+            .unwrap_or(false)
+        {
+            tracing::warn!(
+                path = ?track.file_path,
+                "File is missing from disk after stage completion. Aborting pipeline."
+            );
+
+            let _ = tracks::set_status(&self.db_pool, id, TrackStatus::Missing).await;
+            return;
+        }
 
         let Some(next_stage) = self.get_next_stage(&track.current_stage) else {
             info!("Track reached the end of the pipeline. Marking as Completed.");

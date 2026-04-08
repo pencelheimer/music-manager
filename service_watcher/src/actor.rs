@@ -1,54 +1,67 @@
-use std::{collections::HashSet, convert::Infallible, path::PathBuf, time::Duration};
+use std::{collections::HashSet, path::PathBuf, time::Duration};
 
-use async_trait::async_trait;
-use core_lib::{GlobalState, ServicePlugin, messages::TrackEventHandler};
-use kameo::{Actor, actor::ActorRef};
-use notify_debouncer_full::new_debouncer;
+use core_lib::{GlobalState, messages::TrackCoordinator};
+use kameo::prelude::{Actor, ActorRef};
 use tracing::info;
 
-use crate::{config::LuaWatcherExt, error::WatcherError};
+use crate::{WatcherService, config::Config, error::WatcherError};
 
-#[derive(Debug)]
-pub struct WatcherService<A: Actor + TrackEventHandler> {
-    pub watch_dir: PathBuf,
-    pub target_actor: ActorRef<A>,
-    pub allowed_extensions: HashSet<String>,
+/// Arguments required to initialize and spawn the WatcherService.
+pub struct WatcherServiceArgs<C: TrackCoordinator> {
+    /// Shared global application state.
+    pub config: Config,
+    /// The coordinator or handler actor that will receive the resulting events.
+    pub target_actor: ActorRef<C>,
 }
 
-impl<A: Actor + TrackEventHandler> WatcherService<A> {
-    pub fn new(state: GlobalState, target_actor: ActorRef<A>) -> Result<Self, WatcherError> {
-        let lua_vm = state.lua_vm;
-
-        lua_vm.set_default_config_value("watch_dir", "/default/music/dir")?;
-
-        let watch_dir = lua_vm.watch_dir()?;
-        let allowed_extensions = lua_vm.allowed_extensions()?;
+impl<C: TrackCoordinator> WatcherServiceArgs<C> {
+    pub fn with_state(
+        state: &GlobalState,
+        target_actor: ActorRef<C>,
+    ) -> Result<Self, WatcherError> {
+        let config = Config::new(state)?;
 
         Ok(Self {
-            watch_dir,
+            config,
             target_actor,
-            allowed_extensions,
         })
+    }
+
+    pub fn new(
+        watch_dir: PathBuf,
+        allowed_extensions: HashSet<String>,
+        debounce_duration: Duration,
+        target_actor: ActorRef<C>,
+    ) -> Self {
+        let config = Config {
+            watch_dir,
+            allowed_extensions,
+            debounce_duration,
+        };
+
+        Self {
+            config,
+            target_actor,
+        }
     }
 }
 
-#[async_trait]
-impl<A: Actor + TrackEventHandler> ServicePlugin<WatcherError> for WatcherService<A> {
-    fn name() -> &'static str {
-        "fs_watcher"
-    }
+impl<C: TrackCoordinator> Actor for WatcherService<C> {
+    type Args = WatcherServiceArgs<C>;
+    type Error = WatcherError;
 
-    async fn start_loop(self) -> Result<Infallible, WatcherError> {
-        let watch_dir = self.watch_dir.clone();
+    /// Initializes the actor, configures Lua settings, and starts the OS file watcher.
+    async fn on_start(args: Self::Args, actor_ref: ActorRef<Self>) -> Result<Self, Self::Error> {
+        info!("Starting FS Watcher on {:?}", args.config.watch_dir);
 
-        info!("Starting FS Watcher on {:?}", watch_dir);
+        let debouncer = Self::init_debouncer(&args.config, actor_ref)?;
 
-        // TODO(pencelheimer): maybe set debounce duration from the config
-        let mut debouncer = new_debouncer(Duration::from_secs(2), None, self)?;
-        debouncer.watch(&watch_dir, notify::RecursiveMode::Recursive)?;
-
-        std::future::pending::<()>().await;
-
-        unreachable!("FS Watcher stopped unexpectedly")
+        Ok(Self {
+            watch_dir: args.config.watch_dir,
+            target_actor: args.target_actor,
+            allowed_extensions: args.config.allowed_extensions,
+            debounce_duration: args.config.debounce_duration,
+            debouncer,
+        })
     }
 }

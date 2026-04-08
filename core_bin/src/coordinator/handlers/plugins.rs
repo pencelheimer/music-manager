@@ -25,7 +25,7 @@ impl Message<StageCompleted> for Coordinator {
         msg: StageCompleted,
         _ctx: &mut Context<Self, Self::Reply>,
     ) -> Self::Reply {
-        info!("Plugin successfully completed its stage");
+        info!("Plugin completed its stage");
 
         let id = msg.track_id;
         let path = msg.new_path.as_deref();

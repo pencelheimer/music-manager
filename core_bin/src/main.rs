@@ -2,9 +2,10 @@ use std::{collections::HashMap, process::ExitCode};
 
 use clap::Parser as _;
 use core_bin::{Args, Coordinator, init_tracing};
-use core_lib::{GlobalState, LuaVM, ServicePlugin as _, db};
+use core_lib::{GlobalState, LuaVM, db};
 use kameo::actor::Spawn as _;
-use service_watcher::WatcherService;
+use service_watcher::{WatcherService, WatcherServiceArgs};
+use tracing::info;
 
 #[tokio::main]
 async fn main() -> ExitCode {
@@ -34,9 +35,21 @@ async fn run(args: Args) -> anyhow::Result<()> {
     let coordinator = Coordinator::new(state.clone(), plugins)?;
     let coordinator_ref = Coordinator::spawn(coordinator);
 
-    let watcher = WatcherService::new(state, coordinator_ref)?;
+    let watcher_args = WatcherServiceArgs::with_state(&state, coordinator_ref.clone())?;
+    let watcher_ref = WatcherService::spawn(watcher_args);
 
-    watcher.start_loop().await?;
+    info!("Core is running");
+    tokio::signal::ctrl_c().await?;
+
+    info!("Shutdown signal received. Cleaning up...");
+
+    watcher_ref.stop_gracefully().await?;
+    coordinator_ref.stop_gracefully().await?;
+
+    watcher_ref.wait_for_shutdown().await;
+    coordinator_ref.wait_for_shutdown().await;
+
+    info!("Core stopped safely");
 
     Ok(())
 }

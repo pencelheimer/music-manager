@@ -13,7 +13,7 @@ kameo = { workspace = true }
 sqlx = { workspace = true }
 serde_json = { workspace = true }
 time = { workspace = true }
-tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
+tokio = { workspace = true, features = ["macros", "rt-multi-thread", "signal"] }
 tracing = "0.1.44"
 tracing-subscriber = { workspace = true, features = ["env-filter"] }
 

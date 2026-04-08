@@ -16,12 +16,6 @@ impl Coordinator {
         };
 
         if track.status == TrackStatus::Processing {
-            // TODO(pencelheimer): if plugin was not working with the track directly (e.g.
-            // downloading lyrics) it could return success even after track file was deleted. If
-            // such plugin is the last one in the pipeline coordinator will mark track in the DB as
-            // finished, even when file is not existing anymore. Should check for it (e.g. test if
-            // file metadata was changed and file was marked as missing while processing. mark it as
-            // failed without advancing the pipeline in that case)
             warn!("File removed while being processed. Plugin may recover it. Ignoring");
             return Ok(());
         }

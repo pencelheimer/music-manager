@@ -81,18 +81,6 @@ mod tests {
     use tempfile::NamedTempFile;
 
     #[test]
-    fn test_lua_vm_initializes_with_defaults() {
-        let lua = LuaVM::new().expect("Failed to initialize Lua VM").0;
-
-        let globals = lua.globals();
-        let config: Table = globals.get("config").expect("Config table should exist");
-
-        let watch_dir: String = config.get("watch_dir").unwrap();
-
-        assert_eq!(watch_dir, "/default/music/dir");
-    }
-
-    #[test]
     fn test_load_user_config_overrides_values() {
         let vm = LuaVM::new().unwrap();
         let lua = &vm.0;

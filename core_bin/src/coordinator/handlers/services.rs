@@ -1,4 +1,4 @@
-use core_lib::messages::InteractionResolved;
+use core_lib::{messages::InteractionResolved, models::TrackStatus};
 use kameo::prelude::{Context, Message};
 use tracing::{error, info, instrument};
 
@@ -27,14 +27,22 @@ impl Message<InteractionResolved> for Coordinator {
             response_payload,
         } = msg;
 
+        let Some(track) = self.get_track(track_id).await else {
+            return;
+        };
+
+        if track.status != TrackStatus::PausedWaitingUser {
+            tracing::warn!(
+                status = ?track.status,
+                "Received InteractionResolved for a track that is not waiting for user. Ignoring."
+            );
+            return;
+        }
+
         if let Err(e) = interactions::resolve_interaction(&self.db_pool, track_id).await {
             error!(error = %e, "Failed to resolve interaction in database");
             return;
         }
-
-        let Some(track) = self.get_track(track_id).await else {
-            return;
-        };
 
         self.with_plugin(&plugin_name, track.id, |plugin| async move {
             plugin.send_resume_processing(track, response_payload).await

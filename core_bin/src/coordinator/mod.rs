@@ -39,6 +39,11 @@ impl Actor for Coordinator {
         for track in orphaned_tracks {
             info!(track_id = track.id, stage = ?track.current_stage, "Recovering track processing");
 
+            if track.current_stage == "init" {
+                args.advance_pipeline(track.id).await;
+                continue;
+            }
+
             args.with_plugin(track.current_stage.clone(), track.id, async move |plugin| {
                 plugin.send_process_track(track).await
             })
