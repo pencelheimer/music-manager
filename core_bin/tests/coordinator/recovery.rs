@@ -2,7 +2,7 @@ use core_lib::{db, models::TrackStatus};
 use sqlx::SqlitePool;
 use tempfile::NamedTempFile;
 
-use crate::{Processed, Ping, TestApp, db::seed_track_no_metrics};
+use crate::{Ping, Processed, TestApp, db::seed_track_no_metrics};
 
 #[sqlx::test(migrator = "db::MIGRATOR")]
 async fn test_coordinator_recovery_on_start(pool: SqlitePool) {
