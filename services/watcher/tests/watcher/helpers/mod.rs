@@ -8,9 +8,9 @@ use std::{collections::HashSet, path::PathBuf, time::Duration};
 
 use kameo::actor::{ActorRef, Spawn};
 use once_cell::sync::Lazy;
-use service_watcher::{WatcherService, WatcherServiceArgs};
 use tokio::time::{sleep, timeout};
 use tracing_subscriber::{EnvFilter, fmt, layer::SubscriberExt as _, util::SubscriberInitExt as _};
+use watcher::{WatcherService, WatcherServiceArgs};
 
 static TRACING: Lazy<()> = Lazy::new(|| {
     tracing_subscriber::registry()

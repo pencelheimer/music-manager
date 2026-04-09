@@ -1,11 +1,11 @@
 [workspace]
 resolver = "3"
-members = ["core_bin", "core_lib", "service_watcher"]
+members = ["core_bin", "core_lib", "plugins/*", "services/*"]
 
 [workspace.dependencies]
 async-trait = "0.1.89"
 error_set = "0.9.1"
-kameo = "0.19.2"
+kameo = "0.20.0"
 mlua = { version = "0.11.6", features = ["lua55", "vendored", "async", "send"] }
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.149"

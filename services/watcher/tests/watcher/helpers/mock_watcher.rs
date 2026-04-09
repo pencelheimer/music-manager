@@ -1,6 +1,6 @@
 use core_lib::messages::TrackCoordinator;
 use kameo::prelude::*;
-use service_watcher::WatcherService;
+use watcher::WatcherService;
 
 /// Sync the Watcher mailbox
 pub struct Ping;

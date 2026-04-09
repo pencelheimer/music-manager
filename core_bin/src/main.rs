@@ -4,8 +4,8 @@ use clap::Parser as _;
 use core_bin::{Args, Coordinator, init_tracing};
 use core_lib::{GlobalState, LuaVM, db};
 use kameo::actor::Spawn as _;
-use service_watcher::{WatcherService, WatcherServiceArgs};
 use tracing::info;
+use watcher::{WatcherService, WatcherServiceArgs};
 
 #[tokio::main]
 async fn main() -> ExitCode {

@@ -1,10 +1,10 @@
 [package]
-name = "service_watcher"
+name = "watcher"
 version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-core_lib = { path = "../core_lib" }
+core_lib = { path = "../../core_lib" }
 
 async-trait = { workspace = true }
 error_set = { workspace = true }
