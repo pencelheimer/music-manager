@@ -1,0 +1,4 @@
+prepare-assets:
+    - wget -q -nc -O assets/kevin-macleod-sneaky-snitch.mp3  https://incompetech.com/music/royalty-free/mp3-royaltyfree/Sneaky%20Snitch.mp3
+    - wget -q -nc -O assets/good-kid-rift.wav                https://storage.googleapis.com/gk-media/audio/cwhos/full/01-rift.wav
+    - flac        -f assets/good-kid-rift.wav                --totally-silent
