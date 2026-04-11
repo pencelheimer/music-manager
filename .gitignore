@@ -2,3 +2,7 @@
 */target
 /db
 /.env
+
+/assets/*
+!/assets/*/
+!ATTRIBUTION.md

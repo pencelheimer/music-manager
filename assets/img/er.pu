@@ -1,0 +1,58 @@
+@startuml
+
+hide methods
+skin rose
+skinparam backgroundColor #EEEBDC
+
+enum status {
+    pending
+    processing
+    paused-waiting-user
+    completed
+    failed
+    missing
+}
+
+enum interaction_type {
+    select-from-list
+    confirm-action
+    input-text
+}
+
+entity "tracks" as tracks {
+    * id : INTEGER <<PK>>
+    --
+    - file_path : TEXT <<UNIQUE>>
+    - mtime : DATETIME
+    - file_size : INTEGER
+    - current_stage : TEXT
+    - status : TEXT <<TrackStatus>>
+    - created_at : DATETIME
+    - updated_at : DATETIME
+}
+
+entity "pending_interactions" as pi {
+    * id : INTEGER <<PK>>
+    --
+    + track_id : INTEGER <<FK, UNIQUE>>
+    - plugin_name : TEXT
+    - interaction_type : TEXT <<InteractionType>>
+    - payload : TEXT
+    - created_at : DATETIME
+}
+
+entity "track_fingerprints" as tf {
+    * track_id : INTEGER <<PK, FK>>
+    --
+    - chromaprint : TEXT
+    - duration : REAL
+    - mbid : TEXT
+    - calculated_at : TIMESTAMP
+}
+
+tracks ||--o| pi : "track_id"
+tracks ||--o| tf : "track_id"
+
+status -[hidden]- interaction_type
+
+@enduml

@@ -1,0 +1,50 @@
+@startuml
+hide methods
+skin rose
+skinparam backgroundColor #EEEBDC
+autonumber
+
+actor "User\n(via UI/API)" as User
+participant "Watcher\n(Service Plugin)" as Watcher
+participant "Coordinator" as Coord
+database "Database" as DB
+participant "Tagger\n(Processing Plugin)" as Plugin
+
+== 1. Pipeline Start ==
+Watcher -> Coord : TrackReadyToProcess(Path)
+activate Coord
+Coord -> DB : Create Track (Status: Pending)
+Coord -> Coord : advance_pipeline(track_id)
+Coord -> Plugin : ProcessTrack(Track)
+deactivate Coord
+
+== 2. Processing ==
+activate Plugin
+Plugin -> Plugin : Analyze file...
+Plugin -> Coord : UserInteractionRequired(request)
+deactivate Plugin
+
+activate Coord
+Coord -> DB : Pause track, save Interaction
+Coord -> User : Display request (via UI)
+deactivate Coord
+
+== 3. Interaction Resolution ==
+User -> Coord : InteractionResolved(user_response)
+activate Coord
+Coord -> DB : Mark Interaction as resolved
+Coord -> Plugin : ResumeProcessing(Track, response)
+deactivate Coord
+
+== 4. Stage Completion ==
+activate Plugin
+Plugin -> Plugin : Apply user choice
+Plugin -> Coord : StageCompleted(new_metrics, new_path)
+deactivate Plugin
+
+activate Coord
+Coord -> DB : Update metrics and file path
+Coord -> Coord : advance_pipeline(track_id)
+deactivate Coord
+
+@enduml

@@ -1,0 +1,43 @@
+@startuml
+skin rose
+skinparam backgroundColor #EEEBDC
+skinparam defaultTextAlignment center
+
+start
+
+:User drops "song.mp3" into\n"watch_dir/";
+
+if (Extension in allowed_extensions?) then (Yes)
+  :Watcher emits\nTrackReadyToProcess;
+else (No)
+  :Ignore file;
+  stop
+endif
+
+:Coordinator creates Track in DB;
+:Coordinator checks pipeline_steps;
+
+partition "Plugin: metadata-restorer" {
+  :Analyze acoustic fingerprint;
+
+  if (Multiple metadata matches?) then (Yes)
+    :Plugin emits UserInteractionRequired;
+    :User selects correct album via UI;
+    :Coordinator emits InteractionResolved;
+  else (No)
+  endif
+
+  :Update file ID3 tags;
+  :Plugin emits StageCompleted;
+}
+
+:Coordinator checks next stage;
+
+if (More steps in pipeline?) then (Yes)
+  :Pass Track to next plugin;
+else (No)
+  :Mark Track as Completed;
+endif
+
+stop
+@enduml
