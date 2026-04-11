@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use core_lib::messages::{
-    TrackCoordinator, TrackReadyToProcess as ReadyToProcess, TrackRemoved as Removed,
+    CoordinatorForService, TrackReadyToProcess as ReadyToProcess, TrackRemoved as Removed,
 };
 use kameo::prelude::{ActorRef, Context, Message};
 use notify::{
@@ -15,7 +15,7 @@ use tracing::{debug, info, instrument, warn};
 
 use crate::{WatcherService, config::Config, error::WatcherError};
 
-impl<C: TrackCoordinator> WatcherService<C> {
+impl<C: CoordinatorForService> WatcherService<C> {
     /// Initializes the debouncer with a closure that forwards events to the actor
     pub fn init_debouncer(
         config: &Config,
@@ -100,7 +100,7 @@ impl<C: TrackCoordinator> WatcherService<C> {
 /// A message sent internally to process debounced events within the actor's context.
 pub struct FsDebouncedEvents(pub Vec<DebouncedEvent>);
 
-impl<C: TrackCoordinator> Message<FsDebouncedEvents> for WatcherService<C> {
+impl<C: CoordinatorForService> Message<FsDebouncedEvents> for WatcherService<C> {
     type Reply = ();
 
     async fn handle(

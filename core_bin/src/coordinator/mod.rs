@@ -52,13 +52,26 @@ impl Actor for Coordinator {
 
         Ok(args)
     }
+
+    async fn on_stop(
+        &mut self,
+        _actor_ref: kameo::prelude::WeakActorRef<Self>,
+        _reason: kameo::prelude::ActorStopReason,
+    ) -> std::result::Result<(), Self::Error> {
+        tracing::info!("Coordinator is shutting down. Stopping all plugins...");
+
+        for (name, plugin) in &self.registered_plugins {
+            tracing::info!("Sending stop signal to plugin: {}", name);
+            plugin.graceful_shutdown().await;
+        }
+
+        tracing::info!("Coordinator shutdown complete.");
+        Ok(())
+    }
 }
 
 impl Coordinator {
-    pub fn new(
-        state: GlobalState,
-        registered_plugins: HashMap<String, Arc<dyn TrackProcessor>>,
-    ) -> Result<Self> {
+    pub fn new(state: GlobalState) -> Result<Self> {
         let GlobalState {
             lua_vm, db_pool, ..
         } = state;
@@ -71,7 +84,7 @@ impl Coordinator {
         Ok(Self {
             db_pool,
             pipeline_steps,
-            registered_plugins,
+            registered_plugins: HashMap::new(),
         })
     }
 

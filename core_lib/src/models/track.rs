@@ -1,7 +1,11 @@
-use std::path::PathBuf;
+use std::{
+    path::{Path, PathBuf},
+    time::SystemTime,
+};
 
 use sqlx::{FromRow, Type};
 use time::OffsetDateTime;
+use tokio::fs;
 
 /// Represents the current status of a track in the pipeline.
 #[derive(Debug, Clone, PartialEq, Eq, Type)]
@@ -51,4 +55,15 @@ pub struct Track {
 
     /// The time this record was last updated.
     pub updated_at: OffsetDateTime,
+}
+
+impl FileMetrics {
+    pub async fn get_for_file(path: impl AsRef<Path>) -> Result<Self, std::io::Error> {
+        let meta = fs::metadata(path.as_ref()).await?;
+
+        let file_size = meta.len() as i64;
+        let mtime = OffsetDateTime::from(meta.modified().unwrap_or_else(|_| SystemTime::now()));
+
+        Ok(Self { file_size, mtime })
+    }
 }

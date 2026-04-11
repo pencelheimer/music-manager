@@ -1,9 +1,10 @@
-use std::{collections::HashMap, process::ExitCode};
+use std::process::ExitCode;
 
 use clap::Parser as _;
 use core_bin::{Args, Coordinator, init_tracing};
 use core_lib::{GlobalState, LuaVM, db};
 use kameo::actor::Spawn as _;
+use metadata_restorer::{MetadataRestorer, MetadataRestorerArgs};
 use tracing::info;
 use watcher::{WatcherService, WatcherServiceArgs};
 
@@ -30,10 +31,11 @@ async fn run(args: Args) -> anyhow::Result<()> {
 
     let state = GlobalState::new(lua, db_pool.clone());
 
-    let plugins = HashMap::from([]);
-
-    let coordinator = Coordinator::new(state.clone(), plugins)?;
+    let coordinator = Coordinator::new(state.clone())?;
     let coordinator_ref = Coordinator::spawn(coordinator);
+
+    let mr_args = MetadataRestorerArgs::with_state(&state, coordinator_ref.clone())?;
+    let _mr = MetadataRestorer::spawn(mr_args);
 
     let watcher_args = WatcherServiceArgs::with_state(&state, coordinator_ref.clone())?;
     let watcher_ref = WatcherService::spawn(watcher_args);

@@ -6,7 +6,8 @@ mod watcher {
     mod removed;
 }
 
-use core_lib::models::TrackStatus;
+use core_lib::{messages::RegisterPlugin, models::TrackStatus};
+use kameo::prelude::*;
 use tracing::{error, info, instrument};
 
 use crate::{Coordinator, db::tracks};
@@ -58,5 +59,15 @@ impl Coordinator {
             plugin.send_process_track(track).await
         })
         .await;
+    }
+}
+
+impl Message<RegisterPlugin> for Coordinator {
+    type Reply = ();
+
+    #[instrument(skip_all, fields(name = msg.name))]
+    async fn handle(&mut self, msg: RegisterPlugin, _ctx: &mut Context<Self, Self::Reply>) {
+        tracing::info!("Registering plugin");
+        self.registered_plugins.insert(msg.name, msg.processor);
     }
 }

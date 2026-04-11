@@ -1,0 +1,23 @@
+[package]
+name = "metadata_restorer"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+core_lib = { path = "../../core_lib" }
+
+async-trait = { workspace = true }
+error_set = { workspace = true }
+itertools = { workspace = true }
+kameo = { workspace = true }
+lofty = "0.23.2"
+mlua = { workspace = true }
+nutype = { version = "0.6.2", features = ["regex"] }
+regex = "1.12.3"
+reqwest = { workspace = true, features = ["query"] }
+serde = { workspace = true }
+serde_json = { workspace = true }
+sqlx = { workspace = true }
+time = { workspace = true }
+tokio = { workspace = true, features = ["process"] }
+tracing = { workspace = true }

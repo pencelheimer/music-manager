@@ -37,13 +37,15 @@ impl LuaVM {
         Ok(())
     }
 
+    // TODO(pencelheimer): support nested tables
+    #[instrument(skip_all, fields(key = %key.as_ref()), err)]
     pub fn get_config_value<T: FromLua>(&self, key: impl AsRef<str>) -> Result<T, LuaError> {
-        // TODO(pencelheimer): consider better error message
         let config_table: LuaTable = self.0.globals().get("config")?;
-
-        Ok(config_table.get(key.as_ref())?)
+        let config_value = config_table.get(key.as_ref())?;
+        Ok(config_value)
     }
 
+    // TODO(pencelheimer): support nested tables
     #[instrument(skip(self, default_value), fields(key = %key.as_ref()))]
     pub fn set_default_config_value<V: IntoLua>(
         &self,

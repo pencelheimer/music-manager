@@ -40,6 +40,7 @@ pub trait TrackProcessor: Send + Sync {
         track: Track,
         user_response: serde_json::Value,
     ) -> Result<(), SendError<ResumeProcessing>>;
+    async fn graceful_shutdown(&self);
 }
 
 /// Blanket implementation for processing plugins.
@@ -65,5 +66,10 @@ where
         };
 
         self.tell(msg).send().await
+    }
+
+    async fn graceful_shutdown(&self) {
+        // NOTE(pencelheimer): ignoring if plugin can't stop, as system will shutdown anyway
+        let _ = self.stop_gracefully().await;
     }
 }

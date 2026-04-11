@@ -4,7 +4,7 @@ use core_lib::{GlobalState, LuaVM};
 
 use crate::error::WatcherError;
 
-/// Extantion Trait to extract config for the current plugin from the LuaVM
+/// Extension Trait to extract config for the current plugin from the LuaVM
 pub trait LuaWatcherExt {
     /// Extract the path to watch
     fn watch_dir(&self) -> Result<PathBuf, WatcherError>;
@@ -32,10 +32,15 @@ impl LuaWatcherExt for LuaVM {
     }
 }
 
-/// Internal structure to hold configuration extracted from Lua
+/// Structure to hold configuration extracted from Lua
 pub struct Config {
+    /// The directory being monitored.
     pub watch_dir: PathBuf,
+
+    /// Set of file extensions that this watcher cares about.
     pub allowed_extensions: HashSet<String>,
+
+    /// Time to wait for file system stability before triggering events.
     pub debounce_duration: Duration,
 }
 
