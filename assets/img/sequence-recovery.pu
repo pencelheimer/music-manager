@@ -1,0 +1,27 @@
+@startuml
+skin rose
+skinparam backgroundColor #EEEBDC
+hide empty description
+
+title Track Status Lifecycle
+
+[*] --> Pending : Detected\nby Watcher
+Pending -> Processing : Advance Pipeline
+
+[*] --> Processing : System Recovery
+
+Processing -l-> PausedWaitingUser : Interaction\nRequired
+PausedWaitingUser --> Processing : Interaction\nResolved
+
+state "Pipeline\nCheck" as PipelineCheck <<choice>>
+Processing --> PipelineCheck : Stage\nCompleted
+
+PipelineCheck --> Processing : [Has next stage]
+PipelineCheck --> Completed : [Final stage]
+
+Processing --> Failed : Unrecoverable\nerror
+
+Failed --> [*]
+Completed --> [*]
+
+@enduml

@@ -1,0 +1,44 @@
+@startuml
+hide empty methods
+skin rose
+skinparam backgroundColor #EEEBDC
+
+interface CoordinatorForProcessor {
+    + handle(StageCompleted)
+    + handle(StageFailed)
+    + handle(UserInteractionRequired)
+    + handle(RegisterPlugin)
+}
+
+interface CoordinatorForService {
+    + handle(TrackReadyToProcess)
+    + handle(TrackRemoved)
+    + handle(InteractionResolved)
+}
+
+class Coordinator {
+    + db_pool: SqlitePool
+    + pipeline_steps: Vec<Name>
+    - registered_plugins: HashMap<Name, ActorRef>
+}
+Coordinator ..|> CoordinatorForProcessor
+Coordinator ..|> CoordinatorForService
+
+interface ProcessingHandler {
+    + handle(ProcessTrack)
+    + handle(ResumeProcessing)
+}
+
+class ProcessingPlugin <<Actor>> {
+}
+
+ProcessingPlugin .up.|> ProcessingHandler
+
+class ServicePlugin <<Actor>> {
+}
+
+Coordinator --> ProcessingHandler : Sends Commands\n(ProcessTrack, Resume)
+CoordinatorForProcessor <-- ProcessingPlugin : Sends Events\n(Stage Lifecycle)
+CoordinatorForService <-- ServicePlugin : Sends Events\n(External Triggers)
+
+@enduml

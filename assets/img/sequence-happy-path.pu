@@ -1,0 +1,32 @@
+@startuml
+hide methods
+skin rose
+skinparam backgroundColor #EEEBDC
+autonumber
+
+participant "Watcher\n(Service Plugin)" as Watcher
+participant "Coordinator" as Coord
+database "Database" as DB
+participant "Tagger\n(Processing Plugin)" as Plugin
+
+== 1. Pipeline Start ==
+Watcher -> Coord : TrackReadyToProcess(Path)
+activate Coord
+Coord -> DB : Create Track (Status: Pending)
+Coord -> Coord : advance_pipeline(track_id)
+Coord -> Plugin : ProcessTrack(Track)
+deactivate Coord
+
+== 2. Automated Processing ==
+activate Plugin
+Plugin -> Plugin : Analyze and process file...
+Plugin -> Coord : StageCompleted(new_metrics, new_path)
+deactivate Plugin
+
+== 3. Stage Completion ==
+activate Coord
+Coord -> DB : Update metrics and file path
+Coord -> Coord : advance_pipeline(track_id)
+deactivate Coord
+
+@enduml
