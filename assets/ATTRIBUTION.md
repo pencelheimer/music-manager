@@ -12,6 +12,6 @@ respective owners. Run `just prepare-assets` to download the files for tests.
 
 ### Kevin MacLeod
 * **Track:** Sneaky Snitch
+* **Artist:** Kevin MacLeod
 * **License:** Creative Commons: By Attribution 4.0 License
 * **Source:** [incompetech.com](https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100772)
-* **Artist:** Kevin MacLeod

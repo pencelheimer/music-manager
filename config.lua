@@ -1,7 +1,7 @@
 config.pipeline_steps = { "metadata-restorer" };
 config.allowed_extensions = { "mp3", "flac", "ogg", "wav" };
 
-config.watch_dir = "./plugins/metadata_restorer/assets/";
+config.watch_dir = "./assets/";
 config.db_url = "./db/db.sqlite";
 
 -- TODO(pencelheimer): support nested tables in config
